@@ -3,10 +3,11 @@
 /// contract is supposed to accept ETH funding by anyone and then let the owner withdraw
 pragma solidity ^0.8.18; 
 
-
+/// gas efficiency 
 contract FundMe {
 
-
+//// constant read-only calls are cheaper than non-constant variables
+//// immutable variables are also lower gas cost 
     uint256 public constant min_ETH = 0.01 * 10 ** 18; 
     address _owner; 
     constructor() {
@@ -14,11 +15,11 @@ contract FundMe {
         _owner = msg.sender; 
     }
 
-    mapping(address => uint) public funderValue;
+    mapping(address => uint256) public funderValue;
 
-
+// hardcoding address just for fun 
     address bubaddress = 0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2; 
-    address[] funders;  
+    address[] public funders;  
     event funded(address funder, uint _value); 
     event fundWithdrawn(uint _amount); 
     event ownerchanged(address _newOwner); 
@@ -39,11 +40,19 @@ contract FundMe {
         require (address(this).balance > min_ETH); 
          (bool callSuccess, ) = payable(msg.sender).call{value: address(this).balance}("");
         emit fundWithdrawn(address(this).balance); 
+         _setFunderstoZero(); 
     } 
 
     function changeOwnerToBub(address _newOwner) public onlyOwner{
         _owner = bubaddress; 
         emit ownerchanged(_newOwner);
     }
+    
+    function _setFunderstoZero() public {
+        for (uint256 funderIndex = 0; funderIndex < funders.length; funderIndex = funderIndex + 1) {
+            address funder = funders[funderIndex]; 
+            funderValue[funder] = 0; 
+        } 
+    } 
 
 }
